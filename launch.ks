@@ -28,27 +28,36 @@ WHEN MAXTHRUST = 0 THEN {
 //than 100km. Each cycle, it will check each of the IF
 //statements inside and perform them if their conditions
 //are met
+SET DESIRED_APOAPSIS TO 90000.
 SET MAX_TURN_DEGREES TO 45.
 SET MAX_TURN_ALTITUDE TO 10000.
 SET MYSTEER TO HEADING(90,90).
 LOCK STEERING TO MYSTEER. // from now on we'll be able to change steering by just assigning a new value to MYSTEER
-UNTIL SHIP:APOAPSIS > 90000 { //Remember, all altitudes will be in meters, not kilometers
+UNTIL SHIP:OBT:APOAPSIS > DESIRED_APOAPSIS {
 
-    // Using Velocity
-    // SET CURRENT_ANGLE TO SHIP:VELOCITY:SURFACE:MAG / 10.
-    // Using Altitude
     SET CURRENT_ANGLE TO 90 - ((SHIP:ALTITUDE / MAX_TURN_ALTITUDE) * MAX_TURN_DEGREES).
     IF CURRENT_ANGLE < 45 {
         SET CURRENT_ANGLE TO 45.
     }.
     SET MYSTEER TO HEADING(90,CURRENT_ANGLE).
 }.
-
 PRINT "90km apoapsis reached, cutting throttle".
 
 //At this point, our apoapsis is above 100km and our main loop has ended. Next
 //we'll make sure our throttle is zero and that we're pointed prograde
 LOCK THROTTLE TO 0.
+
+SET MYSTEER TO HEADING(90,0).
+
+UNTIL SHIP:OBT:PERIAPSIS > SHIP:OBT:APOAPSIS {
+    print SHIP:OBT:POSITION AT(0, 15).
+    print SHIP:OBT:VELOCITY AT(0, 16).
+    print SHIP:OBT:TRANSITION AT(0, 19).
+    print SHIP:OBT:EPOCH AT(0, 20).
+    print SHIP:OBT:TRUEANOMALY AT(0, 21).
+    print SHIP:OBT:MEANANOMALYATEPOCH AT(0, 22).
+    print SHIP:OBT:LAN AT(0, 23).
+}.
 
 //This sets the user's throttle setting to zero to prevent the throttle
 //from returning to the position it was at before the script was run.

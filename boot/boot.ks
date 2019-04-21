@@ -1,0 +1,5 @@
+CLEARSCREEN.
+
+PRINT "Hey Bill!".
+
+SWITCH TO 0.
