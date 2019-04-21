@@ -1,11 +1,9 @@
 // Launch from Kerbin and circularize the orbit.
 
 SET DESIRED_RADIUS TO 90000.
-SET RADIUS_FUZZ TO 10000.
 SET MAX_TURN_DEGREES TO 45.
 SET MAX_TURN_ALTITUDE TO 10000.
 SET CLEARANCE_DELAY_IN_SECONDS TO 1.
-SET TIME_TO_START_CIRCULARIZING_BEFORE_APO_IN_SECONDS TO 10.
 
 //First, we'll clear the terminal screen to make it look nice
 CLEARSCREEN.
@@ -13,13 +11,6 @@ CLEARSCREEN.
 //Next, we'll lock our throttle to 100%.
 SET TSET TO 1.0.
 LOCK THROTTLE TO TSET.   // 1.0 is the max, 0.0 is idle.
-
-//This is our countdown loop, which cycles from 10 to 0
-PRINT "Counting down:".
-FROM {local countdown is 3.} UNTIL countdown = 0 STEP {SET countdown to countdown - 1.} DO {
-    PRINT "..." + countdown.
-    WAIT 1. // pauses the script here for 1 second.
-}
 
 //This is a trigger that constantly checks to see if our thrust is zero.
 //If it is, it will attempt to stage and then return to where the script
@@ -40,32 +31,45 @@ WHEN MAXTHRUST = 0 THEN {
 // Wait for clearance of launch pad.
 WAIT CLEARANCE_DELAY_IN_SECONDS.
 
-SET SSET TO HEADING(90,90).
-LOCK STEERING TO SSET. // from now on we'll be able to change steering by just assigning a new value to SSET
+LOCK STEERING TO HEADING(90,90). 
 UNTIL SHIP:OBT:APOAPSIS > DESIRED_RADIUS {
 
     SET CURRENT_ANGLE TO 90 - ((SHIP:ALTITUDE / MAX_TURN_ALTITUDE) * MAX_TURN_DEGREES).
     IF CURRENT_ANGLE < 45 {
         SET CURRENT_ANGLE TO 45.
     }.
-    SET SSET TO HEADING(90,CURRENT_ANGLE).
+    LOCK STEERING TO HEADING(90, CURRENT_ANGLE).
 }.
-PRINT "desired apoapsis reached, cutting throttle".
+PRINT "Desired apoapsis (" + DESIRED_RADIUS +"m) reached, cutting throttle.".
 
+LOCK STEERING TO HEADING(90,0).
 SET TSET TO 0.
-SET SSET TO SHIP:SRFRETROGRADE.
 
-SET REACHED_APOAPSIS TO SHIP:OBT:APOAPSIS.
+PRINT "Waiting to reach end of atmosphere at " + SHIP:BODY:ATM:HEIGHT + "m to compute burn duration.".
 
-// Are we close to the apoapsis?
-WAIT UNTIL (ETA:APOAPSIS < TIME_TO_START_CIRCULARIZING_BEFORE_APO_IN_SECONDS OR ETA:APOAPSIS > ETA:PERIAPSIS).
-PRINT "Close to apoapsis, starting to circularize.".
+WAIT UNTIL SHIP:ALTITUDE > SHIP:BODY:ATM:HEIGHT.
 
-SET SSET TO HEADING(90,0).
+// Compute needed burn duration to circularize the orbit using the equation for precise orbital speed.
+SET MU TO SHIP:BODY:MU.
+SET R TO SHIP:BODY:RADIUS + SHIP:OBT:APOAPSIS.
+SET A_CIRCULAR TO SHIP:BODY:RADIUS + SHIP:OBT:APOAPSIS.
+SET A_VESSEL TO SHIP:BODY:RADIUS + (SHIP:OBT:APOAPSIS + SHIP:OBT:PERIAPSIS) / 2.
+SET V_CIRCULAR TO SQRT(MU * ((2 / R) - (1 / A_CIRCULAR))).
+SET V_VESSEL TO SQRT(MU * ((2 / R) - (1 / A_VESSEL))).
+SET DELTA_V TO V_CIRCULAR - V_VESSEL.
+PRINT "DELTA V: " + DELTA_V + "m/s".
+
+SET MAX_ACCELERATION TO SHIP:MAXTHRUST/SHIP:MASS.
+SET BURN_DURATION TO DELTA_V / MAX_ACCELERATION.
+PRINT "Burn Duration: " + BURN_DURATION + "s".
+
+WAIT UNTIL (ETA:APOAPSIS - (BURN_DURATION / 2) < 0).
+
+LOCK STEERING TO HEADING(90,0).
 SET TSET TO 1.
 
-// Is the orbit circularized-ish?
-WAIT UNTIL SHIP:OBT:APOAPSIS > REACHED_APOAPSIS + RADIUS_FUZZ.
+// Wait until the apoapsis and periapsis flip
+WAIT UNTIL ABS(SHIP:OBT:APOAPSIS - SHIP:OBT:PERIAPSIS) < 2000.
 
 PRINT "Orbit circularized".
 
