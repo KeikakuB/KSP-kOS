@@ -12,12 +12,20 @@ DECLARE GLOBAL FUNCTION CIRCULARIZE_ORBIT {
         RETURN FALSE.
     }.
     PRINT "EXEC 'CIRCULARIZE_ORBIT'...".
-    LOCK STEERING TO HEADING(90,0).
+    LOCAL is_going_forward IS ETA:APOAPSIS < ETA:PERIAPSIS.
+    LOCAL degrees IS -90.
+    IF is_going_forward {
+        PRINT "Circularizing up/forward".
+        SET degrees TO 90.
+    }
+    LOCK STEERING TO HEADING(degrees,0).
     LOCK THROTTLE TO 0.
 
-    IF SHIP:BODY:ATM:HEIGHT > 0.1 {
+    LOCK IS_ABOVE_ATMOSPHERE TO SHIP:ALTITUDE > SHIP:BODY:ATM:HEIGHT.
+
+    IF SHIP:BODY:ATM:HEIGHT > 0.1 AND NOT IS_ABOVE_ATMOSPHERE {
         PRINT "Waiting to reach end of atmosphere at " + SHIP:BODY:ATM:HEIGHT + "m to compute burn duration.".
-        WAIT UNTIL SHIP:ALTITUDE > SHIP:BODY:ATM:HEIGHT.
+        WAIT UNTIL IS_ABOVE_ATMOSPHERE.
     }.
 
     // Compute needed burn duration to circularize the orbit using the equation for precise orbital speed.
@@ -34,14 +42,15 @@ DECLARE GLOBAL FUNCTION CIRCULARIZE_ORBIT {
     LOCAL burn_duration IS delta_v / max_acceleration.
     PRINT "Burn Duration: " + burn_duration + "s".
 
-    WAIT UNTIL (ETA:APOAPSIS - (burn_duration / 2) < 0).
+    LOCAL half_burn_duration IS (burn_duration / 2).
+    WAIT UNTIL ((is_going_forward AND ETA:APOAPSIS - half_burn_duration < 0) OR (NOT is_going_forward AND ETA:PERIAPSIS - half_burn_duration < 0)).
     // Start burn
     LOCAL min_abs_diff IS ABS(SHIP:OBT:APOAPSIS - SHIP:OBT:PERIAPSIS).
 
     PRINT "Burn START: " + MISSIONTIME + "s".
     PRINT "Burn END: " + (MISSIONTIME + burn_duration)+ "s".
 
-    LOCK STEERING TO HEADING(90,0).
+    LOCK STEERING TO HEADING(degrees, 0).
     LOCK THROTTLE TO 1.
 
     // Wait until the apoapsis and periapsis flip
