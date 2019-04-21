@@ -1,3 +1,5 @@
+// Launch from Kerbin and circularize the orbit.
+
 SET DESIRED_RADIUS TO 90000.
 SET RADIUS_FUZZ TO 10000.
 SET MAX_TURN_DEGREES TO 45.
@@ -9,8 +11,8 @@ SET TIME_TO_START_CIRCULARIZING_BEFORE_APO_IN_SECONDS TO 10.
 CLEARSCREEN.
 
 //Next, we'll lock our throttle to 100%.
-SET MYTHROTTLE TO 1.0.
-LOCK THROTTLE TO MYTHROTTLE.   // 1.0 is the max, 0.0 is idle.
+SET TSET TO 1.0.
+LOCK THROTTLE TO TSET.   // 1.0 is the max, 0.0 is idle.
 
 //This is our countdown loop, which cycles from 10 to 0
 PRINT "Counting down:".
@@ -38,20 +40,20 @@ WHEN MAXTHRUST = 0 THEN {
 // Wait for clearance of launch pad.
 WAIT CLEARANCE_DELAY_IN_SECONDS.
 
-SET MYSTEER TO HEADING(90,90).
-LOCK STEERING TO MYSTEER. // from now on we'll be able to change steering by just assigning a new value to MYSTEER
+SET SSET TO HEADING(90,90).
+LOCK STEERING TO SSET. // from now on we'll be able to change steering by just assigning a new value to SSET
 UNTIL SHIP:OBT:APOAPSIS > DESIRED_RADIUS {
 
     SET CURRENT_ANGLE TO 90 - ((SHIP:ALTITUDE / MAX_TURN_ALTITUDE) * MAX_TURN_DEGREES).
     IF CURRENT_ANGLE < 45 {
         SET CURRENT_ANGLE TO 45.
     }.
-    SET MYSTEER TO HEADING(90,CURRENT_ANGLE).
+    SET SSET TO HEADING(90,CURRENT_ANGLE).
 }.
 PRINT "desired apoapsis reached, cutting throttle".
 
-SET MYTHROTTLE TO 0.
-SET MYSTEER TO HEADING(90,0).
+SET TSET TO 0.
+SET SSET TO HEADING(90,0).
 
 SET REACHED_APOAPSIS TO SHIP:OBT:APOAPSIS.
 
@@ -59,15 +61,19 @@ SET REACHED_APOAPSIS TO SHIP:OBT:APOAPSIS.
 WAIT UNTIL (ETA:APOAPSIS < TIME_TO_START_CIRCULARIZING_BEFORE_APO_IN_SECONDS OR ETA:APOAPSIS > ETA:PERIAPSIS).
 PRINT "Close to apoapsis, starting to circularize.".
 
-SET MYSTEER TO HEADING(90,0).
-SET MYTHROTTLE TO 1.
+SET SSET TO HEADING(90,0).
+SET TSET TO 1.
 
 // Is the orbit circularized-ish?
 WAIT UNTIL SHIP:OBT:APOAPSIS > REACHED_APOAPSIS + RADIUS_FUZZ.
 
 PRINT "Orbit circularized".
 
-SET MYTHROTTLE TO 0.
+SET TSET TO 0.
+
+UNLOCK STEERING.
+UNLOCK THROTTLE.
+
 //This sets the user's throttle setting to zero to prevent the throttle
 //from returning to the position it was at before the script was run.
 SET SHIP:CONTROL:PILOTMAINTHROTTLE TO 0.
