@@ -1,5 +1,5 @@
 // Execute the next maneuver node.
-SET ND TO NEXTNODE
+SET ND TO NEXTNODE.
 
 //print out node's basic parameters - ETA and deltaV
 PRINT "Node in: " + ROUND(ND:ETA) + ", deltaV: " + ROUND(ND:DELTAV:MAG).
@@ -25,7 +25,7 @@ SET MAX_ACC TO SHIP:MAXTHRUST/SHIP:MASS.
 SET BURN_DURATION TO ND:DELTAV:MAG/MAX_ACC.
 PRINT "Crude Estimated burn duration: " + ROUND(BURN_DURATION) + "s".
 
-WAIT UNTIL ND:ETA <= (BURN_DURATION/2 + 60)
+WAIT UNTIL ND:ETA <= (BURN_DURATION/2 + 60).
 
 SET NP TO ND:DELTAV. 
 //points to node, don't care about the roll direction.
