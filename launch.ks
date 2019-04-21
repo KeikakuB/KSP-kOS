@@ -1,10 +1,16 @@
-//hellolaunch
+SET DESIRED_RADIUS TO 90000.
+SET RADIUS_FUZZ TO 10000.
+SET MAX_TURN_DEGREES TO 45.
+SET MAX_TURN_ALTITUDE TO 10000.
+set CLEARANCE_DELAY_IN_SECONDS to 1.
+SET TIME_TO_START_CIRCULARIZING_BEFORE_APO_IN_SECONDS TO 10.
 
 //First, we'll clear the terminal screen to make it look nice
 CLEARSCREEN.
 
 //Next, we'll lock our throttle to 100%.
-LOCK THROTTLE TO 1.0.   // 1.0 is the max, 0.0 is idle.
+SET MYTHROTTLE TO 1.0.
+LOCK THROTTLE TO MYTHROTTLE.   // 1.0 is the max, 0.0 is idle.
 
 //This is our countdown loop, which cycles from 10 to 0
 PRINT "Counting down:".
@@ -28,12 +34,13 @@ WHEN MAXTHRUST = 0 THEN {
 //than 100km. Each cycle, it will check each of the IF
 //statements inside and perform them if their conditions
 //are met
-SET DESIRED_APOAPSIS TO 90000.
-SET MAX_TURN_DEGREES TO 45.
-SET MAX_TURN_ALTITUDE TO 10000.
+
+// Wait for clearance of launch pad.
+WAIT CLEARANCE_DELAY_IN_SECONDS.
+
 SET MYSTEER TO HEADING(90,90).
 LOCK STEERING TO MYSTEER. // from now on we'll be able to change steering by just assigning a new value to MYSTEER
-UNTIL SHIP:OBT:APOAPSIS > DESIRED_APOAPSIS {
+UNTIL SHIP:OBT:APOAPSIS > DESIRED_RADIUS {
 
     SET CURRENT_ANGLE TO 90 - ((SHIP:ALTITUDE / MAX_TURN_ALTITUDE) * MAX_TURN_DEGREES).
     IF CURRENT_ANGLE < 45 {
@@ -41,24 +48,26 @@ UNTIL SHIP:OBT:APOAPSIS > DESIRED_APOAPSIS {
     }.
     SET MYSTEER TO HEADING(90,CURRENT_ANGLE).
 }.
-PRINT "90km apoapsis reached, cutting throttle".
+PRINT "desired apoapsis reached, cutting throttle".
 
-//At this point, our apoapsis is above 100km and our main loop has ended. Next
-//we'll make sure our throttle is zero and that we're pointed prograde
-LOCK THROTTLE TO 0.
-
+SET MYTHROTTLE TO 0.
 SET MYSTEER TO HEADING(90,0).
 
-UNTIL SHIP:OBT:PERIAPSIS > SHIP:OBT:APOAPSIS {
-    print SHIP:OBT:POSITION AT(0, 15).
-    print SHIP:OBT:VELOCITY AT(0, 16).
-    print SHIP:OBT:TRANSITION AT(0, 19).
-    print SHIP:OBT:EPOCH AT(0, 20).
-    print SHIP:OBT:TRUEANOMALY AT(0, 21).
-    print SHIP:OBT:MEANANOMALYATEPOCH AT(0, 22).
-    print SHIP:OBT:LAN AT(0, 23).
-}.
+SET REACHED_APOAPSIS TO SHIP:OBT:APOAPSIS.
 
+// Are we close to the apoapsis?
+WAIT UNTIL (ETA:APOAPSIS < TIME_TO_START_CIRCULARIZING_BEFORE_APO_IN_SECONDS OR ETA:APOAPSIS > ETA:PERIAPSIS).
+PRINT "Close to apoapsis, starting to circularize.".
+
+SET MYSTEER TO HEADING(90,0).
+SET MYTHROTTLE TO 1.
+
+// Is the orbit circularized-ish?
+WAIT UNTIL SHIP:OBT:APOAPSIS > REACHED_APOAPSIS + RADIUS_FUZZ.
+
+PRINT "Orbit circularized".
+
+SET MYTHROTTLE TO 0.
 //This sets the user's throttle setting to zero to prevent the throttle
 //from returning to the position it was at before the script was run.
 SET SHIP:CONTROL:PILOTMAINTHROTTLE TO 0.
