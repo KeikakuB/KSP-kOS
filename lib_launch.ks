@@ -9,6 +9,8 @@ DECLARE GLOBAL FUNCTION LAUNCH {
     DECLARE PARAMETER MAX_TURN_ALTITUDE IS 10000.
     PRINT "    MAX_TURN_ALTITUDE: " + MAX_TURN_ALTITUDE.
 
+    LOCK STEERING TO SSET.
+    SET SSET TO HEADING(90,90). 
     LOCK THROTTLE TO 1.0.
     STAGE.
 
@@ -36,16 +38,15 @@ DECLARE GLOBAL FUNCTION LAUNCH {
 
     // Wait for clearance of launch pad.
     WAIT CLEARANCE_DELAY_IN_SECONDS.
-
-    LOCK STEERING TO HEADING(90,90). 
     UNTIL SHIP:OBT:APOAPSIS > DESIRED_RADIUS {
-
         LOCAL current_angle IS 90 - ((SHIP:ALTITUDE / MAX_TURN_ALTITUDE) * MAX_TURN_DEGREES).
         IF current_angle < 45 {
-            SET current_angle TO 45.
+            BREAK.
         }.
-        LOCK STEERING TO HEADING(90, current_angle).
+        SET SSET TO HEADING(90, current_angle).
     }.
+    LOCK STEERING TO HEADING(90, 45).
+    WAIT UNTIL SHIP:OBT:APOAPSIS > DESIRED_RADIUS.
     PRINT "Desired apoapsis (" + DESIRED_RADIUS +"m) reached, cutting throttle.".
     LOCK THROTTLE TO 0.
     PRINT "END 'LAUNCH'.".
