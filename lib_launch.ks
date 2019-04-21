@@ -10,14 +10,21 @@ DECLARE GLOBAL FUNCTION LAUNCH {
     PRINT "    MAX_TURN_ALTITUDE: " + MAX_TURN_ALTITUDE.
 
     LOCK THROTTLE TO 1.0.
+    STAGE.
 
     //This is a trigger that constantly checks to see if our thrust is zero.
     //If it is, it will attempt to stage and then return to where the script
     //left off. The PRESERVE keyword keeps the trigger active even after it
     //has been triggered.
-    WHEN STAGE:READY AND SHIP:MAXTHRUST = 0 THEN {
-        PRINT "Staging: " + STAGE:NUMBER.
-        STAGE.
+    WHEN STAGE:READY THEN {
+        LIST ENGINES IN elist.
+        FOR e IN elist {
+            IF e:FLAMEOUT {
+                STAGE.
+                PRINT "Staging: " + STAGE:NUMBER.
+                BREAK.
+            }.
+        }.
         PRESERVE.
     }.
 
