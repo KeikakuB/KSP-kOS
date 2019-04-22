@@ -1,0 +1,7 @@
+// match the given specific orbit.
+// some of these should be optional with reasonable defaults
+DECLARE LOCAL APOAPSIS.
+DECLARE LOCAL PERIAPSIS.
+DECLARE LOCAL INCLINATION.
+DECLARE LOCAL LONGITUDE_OF_ASCENDING_NODE.
+DECLARE LOCAL ARGUMENT_OF_PERIAPSIS.
