@@ -9,19 +9,7 @@ SET MAX_ACC TO SHIP:MAXTHRUST/SHIP:MASS.
 
 // Now we just need to divide deltav:mag by our ship's max acceleration
 // to get the estimated time of the burn.
-//
-// Please note, this is not exactly correct.  The real calculation
-// needs to take into account the fact that the mass will decrease
-// as you lose fuel during the burn.  In fact throwing the fuel out
-// the back of the engine very fast is the entire reason you're able
-// to thrust at all in space.  The proper calculation for this
-// can be found easily enough online by searching for the phrase
-//   "Tsiolkovsky rocket equation".
-// This example here will keep it simple for demonstration purposes,
-// but if you're going to build a serious node execution script, you
-// need to look into the Tsiolkovsky rocket equation to account for
-// the change in mass over time as you burn.
-//
+// TODO use Tsiolkovsky rocket equation for more precise calculation
 SET BURN_DURATION TO ND:DELTAV:MAG/MAX_ACC.
 PRINT "Crude Estimated burn duration: " + ROUND(BURN_DURATION) + "s".
 
@@ -37,7 +25,6 @@ WAIT UNTIL VANG(NP, SHIP:FACING:VECTOR) < 0.25.
 //the ship is facing the right direction, let's wait for our burn time
 WAIT UNTIL ND:ETA <= (BURN_DURATION/2).
 
-//we only need to lock throttle once to a certain variable in the beginning of the loop, and adjust only the variable itself inside it
 SET TSET TO 0.
 LOCK THROTTLE TO TSET.
 

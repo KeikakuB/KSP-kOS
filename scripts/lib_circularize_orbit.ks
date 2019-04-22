@@ -4,8 +4,8 @@ DECLARE GLOBAL FUNCTION CIRCULARIZE_ORBIT {
     DECLARE LOCAL FUNCTION HAS_CIRCULARIZED {
         LOCAL abs_diff IS ABS(SHIP:OBT:APOAPSIS - SHIP:OBT:PERIAPSIS).
         IF min_abs_diff < MIN_DIFF OR (abs_diff > min_abs_diff AND ABS(abs_diff - min_abs_diff) > FUZZ) {
-            // If the diff is close to 0 than we're close to a circular orbit so let's stop.
-            // If the diff is bigger than our minimum continuing to throttle will push us further from a circular orbit so let's stop.
+            // diff is close to 0 so we're close to a circular orbit.
+            // diff is bigger than our minimum continuing to throttle will push us further from a circular orbit so let's stop.
             RETURN TRUE.
         }.
         SET min_abs_diff TO abs_diff.
