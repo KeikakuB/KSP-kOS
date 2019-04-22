@@ -2,4 +2,8 @@ CLEARSCREEN.
 
 PRINT "Hey Bill!".
 
-SWITCH TO 0.
+COPYPATH("Archive:/scripts", "1:/scripts")
+
+SWITCH TO 1.
+
+CD("1:/scripts")
