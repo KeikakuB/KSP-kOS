@@ -1,3 +1,49 @@
+DECLARE GLOBAL FUNCTION ADJUST_ORBIT {
+    PRINT "EXEC 'ADJUST_ORBIT'...".
+    DECLARE PARAMETER RADIUS_IN_METERS.
+    PRINT "    RADIUS_IN_METERS: " + RADIUS_IN_METERS.
+    
+    LOCAL is_apo_next IS ETA:APOAPSIS < ETA:PERIAPSIS.
+    LOCAL initial_value IS SHIP:OBT:APOAPSIS.
+    LOCAL adjustment_in_meters IS RADIUS_IN_METERS - SHIP:OBT:APOAPSIS.
+    IF is_apo_next {
+        SET initial_value TO SHIP:OBT:PERIAPSIS.
+        SET adjustment_in_meters TO RADIUS_IN_METERS - SHIP:OBT:PERIAPSIS.
+        PRINT "Waiting for apoapsis.".
+    }
+    ELSE {
+        PRINT "Waiting for periapsis.".
+    }.
+    PRINT "Adjusting: " + adjustment_in_meters + "m".
+    LOCAL degrees IS -90.
+    IF adjustment_in_meters > 0 {
+        SET degrees TO 90.
+    }.
+
+    LOCK STEERING TO HEADING(degrees,0).
+    LOCK THROTTLE TO 0.0.
+    WAIT UNTIL ((is_apo_next AND ETA:APOAPSIS > ETA:PERIAPSIS) OR (NOT is_apo_next AND ETA:PERIAPSIS > ETA:APOAPSIS)).
+    LOCK STEERING TO HEADING(degrees,0).
+    LOCK THROTTLE TO 1.0.
+    PRINT "Burning.".
+    // TODO this doesn't work if the apo and peri flip as we burn
+    WAIT UNTIL ((is_apo_next AND (SHIP:OBT:PERIAPSIS - initial_value) < adjustment_in_meters) OR (NOT is_apo_next AND (SHIP:OBT:APOAPSIS - initial_value) < adjustment_in_meters)).
+
+    LOCK THROTTLE TO 0.
+    PRINT "END 'ADJUST_ORBIT'.".
+}.
+
+DECLARE GLOBAL FUNCTION TRANSFER_ORBIT {
+    // convert the orbit into a circular orbit state no matter the initial state (like if we're starting to orbit a moon) using the given apo parameter
+    PRINT "EXEC 'TRANSFER_ORBIT'...".
+    DECLARE PARAMETER RADIUS_IN_METERS.
+
+    ADJUST_ORBIT(RADIUS_IN_METERS).
+    WAIT 2.
+    ADJUST_ORBIT(RADIUS_IN_METERS).
+    PRINT "END 'TRANSFER_ORBIT'...".
+}
+
 DECLARE GLOBAL FUNCTION CIRCULARIZE_ORBIT {
     LOCAL MIN_DIFF IS 1000.
     LOCAL FUZZ IS 100.

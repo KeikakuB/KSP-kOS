@@ -38,7 +38,7 @@ SWITCH TO 0.
 DELETEPATH(ON_BOARD_PATH).
 LOCAL FREESPACE IS VOLUME(VOLUME_NUMBER):FREESPACE.
 PRINT "Available space: " + FREESPACE + "B".
-LOCAL SCRIPTS IS LIST( "lib_launch", "lib_circularize_orbit", "circ", "lib_exit", "lo", "lib_execute_maneuver_node", "man", "lib_suicide_burn", "sburn").
+LOCAL SCRIPTS IS LIST( "lib_launch", "lib_orbit", "lib_exit", "lo", "lib_execute_maneuver_node", "man", "torbit", "lib_suicide_burn", "sburn", "circ").
 FOR s IN SCRIPTS {
     COPY_SCRIPT_TO_LOCAL_COMPILING_IF_NEEDED(s).
 }.
