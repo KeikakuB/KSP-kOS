@@ -1,72 +1,31 @@
 DECLARE FUNCTION SUICIDE_BURN {
     PRINT "EXEC 'SUICIDE_BURN'...".
     // Perform a suicide burn such that you stop thrusting as soon as you reach the ground.
-
-    // 
-    // 
-    // 
-    LOCAL _BODY IS SHIP:OBT:BODY.
-
-    WHEN STAGE:READY THEN {
-        LIST ENGINES IN elist.
-        FOR e IN elist {
-            IF e:FLAMEOUT {
-                STAGE.
-                PRINT "Staging: " + STAGE:NUMBER.
-                BREAK.
-            }.
-        }.
-        PRESERVE.
-    }.
-
-    // P-loop setup
+    LOCK THROTTLE TO 0.
     LOCK STEERING TO HEADING(90, 90).
-    WAIT UNTIL VANG(HEADING(90, 90):VECTOR, SHIP:FACING:VECTOR) < 0.25.
 
-
-    LOCAL tset IS 0.
-    LOCK THROTTLE TO tset.
-    // 
     LOCAL _BODY IS SHIP:OBT:BODY.
     LOCAL g IS _BODY:MU / _BODY:RADIUS^2.
-    LOCAL v_speed IS SHIP:VERTICALSPEED.
-    LOCAL alt_radar IS ALT:RADAR.
-
-    LOCAL a IS -g.
-    LOCAL b IS v_speed.
-    LOCAL c IS alt_radar.
-    LOCAL d IS (b*b) - (4*a*c).
-
-    LOCAL sol1 IS (-b-SQRT(d))/(2*a).
-    LOCAL sol2 IS (-b+SQRT(d))/(2*a).
-    PRINT "FALL INFO: ".
-    PRINT "d: " + d.
-    PRINT "-g, a: " + a.
-    PRINT "vspeed b: " + b.
-    PRINT "alt radar c: " + c.
-    PRINT sol1 + ", " + sol2.
-    LOCAL fall_duration IS sol1.
-
-    // TODO calculate this (use deltav?) TODO use Tsiolkovsky rocket equation?
-    // TODO try to figure out how I can use a PID controller to do this?
-
-    LOCAL burn_duration is 30.
-
-    PRINT "Burn duration: " + burn_duration + "s".
-    PRINT "Fall duration: " + fall_duration + "s".
-    LOCAL WAIT_DURATION IS (fall_duration - burn_duration).
-    PRINT "Waiting for: " + WAIT_DURATION + "s".
-
-    //WAIT WAIT_DURATION.
-    //SET tset TO 1.
-    //LOCAL t IS TIME:SECONDS().
-    //UNTIL ALT:RADAR < 50 OR SHIP:VERTICALSPEED > 0 {
-        //SET burn_duration TO burn_duration - (TIME:SECONDS() - t).
-        //SET fall_duration TO fall_duration - (TIME:SECONDS() - t).
-        //PRINT "Burn duration: " + burn_duration + "s" at (0, 18).
-        //PRINT "Fall duration: " + fall_duration + "s" at (0, 19).
-        //SET t TO TIME:SECONDS().
-    //}
-    SET tset TO 0.
+    UNTIL FALSE {
+        WAIT 0.01.
+        LOCAL a IS (SHIP:MAXTHRUST/SHIP:MASS) - g.
+        //TODO TIP: if I orbit as low as possible before doing the suicide burn, small errors in the math won't matter as much not to mention it should be more optimal.
+        //TODO This works but does not take into account the fact that the acceleration increases as we burn due to loss of mass eg. Tsiolkovsky rocket equation? therefore we stop early
+        LOCAL initial_speed IS SHIP:VERTICALSPEED.
+        LOCAL t IS initial_speed/a.
+        LOCAL avg_speed IS initial_speed/2.
+        LOCAL burn_distance IS avg_speed * t.
+        LOCAL altitude IS ALTITUDE - SHIP:GEOPOSITION:TERRAINHEIGHT.
+        PRINT "burn_distance: " + burn_distance AT (0, 20).
+        PRINT "RADAR: " + altitude AT (0, 21).
+        IF burn_distance > altitude {
+            BREAK.
+        }
+    }
+    LOCK THROTTLE TO 1.
+    PRINT "Burning...".
+    WAIT UNTIL ALT:RADAR < 50 OR SHIP:VERTICALSPEED > 0.
+    PRINT "Burn done.".
+    LOCK THROTTLE TO 0.
     PRINT "END 'SUICIDE_BURN'.".
 }.
