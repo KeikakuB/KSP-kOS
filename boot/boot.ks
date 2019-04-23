@@ -29,20 +29,20 @@ DECLARE FUNCTION COPY_SCRIPT_TO_LOCAL_COMPILING_IF_NEEDED {
         PRINT COMPILED_FILESIZE + "B, saved " + BYTES_SAVED + "B: " + COMPILED_FILENAME.
     }.
 }.
+SET CONFIG:SAFE TO FALSE.
 CLEARSCREEN.
 
 // Switch to archives to check if we have access, to stop this script early (Does this work?)
 SWITCH TO 0.
-SWITCH TO VOLUME_NUMBER.
 
 DELETEPATH(ON_BOARD_PATH).
 LOCAL FREESPACE IS VOLUME(VOLUME_NUMBER):FREESPACE.
 PRINT "Available space: " + FREESPACE + "B".
-LOCAL SCRIPTS IS LIST( "lib_launch", "lib_circularize_orbit", "circ", "lib_exit", "lo", "lib_execute_maneuver_node", "man").
+LOCAL SCRIPTS IS LIST( "lib_launch", "lib_circularize_orbit", "circ", "lib_exit", "lo", "lib_execute_maneuver_node", "man", "lib_suicide_burn", "sburn").
 FOR s IN SCRIPTS {
     COPY_SCRIPT_TO_LOCAL_COMPILING_IF_NEEDED(s).
 }.
 LOCAL FREESPACE IS VOLUME(VOLUME_NUMBER):FREESPACE.
 PRINT "Remaining space: " + FREESPACE + "B".
 
-CD(ON_BOARD_PATH).
+CD(ARCHIVE_PATH).
