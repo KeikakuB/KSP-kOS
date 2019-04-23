@@ -1,6 +1,7 @@
 DECLARE FUNCTION SUICIDE_BURN {
     PRINT "EXEC 'SUICIDE_BURN'...".
     // Perform a suicide burn such that you stop thrusting as soon as you reach the ground.
+    // TODO kill all horizontal speed before performing the code below 
     LOCK THROTTLE TO 0.
     LOCK STEERING TO HEADING(90, 90).
 
