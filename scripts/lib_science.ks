@@ -6,11 +6,14 @@ DECLARE GLOBAL FUNCTION DO_SCIENCE_BATCH {
     //FOR t IN TESTS {
         //PRINT t:NAME.
     //}.
-    LOCAL FRIENDLY_NAMES IS LIST( "Thermometer", "Barometer", "GooExperiment", "Science Jr.").
-    LOCAL PART_NAMES IS LIST( "sensorThermometer", "sensorBarometer", "GooExperiment", "science.module").
+    LOCAL LPARTS TO LEXICON().
+    LPARTS:ADD("sensorThermometer", "Thermometer").
+    LPARTS:ADD("sensorBarometer", "Barometer").
+    LPARTS:ADD("GooExperiment", "GooExperiment").
+    LPARTS:ADD("science.module", "Science Jr.").
     LOCAL i IS 0.
-    FOR name IN PART_NAMES {
-        LOCAL friendly_name IS FRIENDLY_NAMES[i].
+    FOR name IN LPARTS:KEYS {
+        LOCAL friendly_name IS LPARTS[name].
         SET PARTS TO SHIP:PARTSNAMED(name).
         LOCAL found_empty_science_experiment IS FALSE.
         LOCAL count_with_data IS 0.
